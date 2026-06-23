@@ -20,6 +20,7 @@ import { PomodoroTimer } from '@/pages/tools/daily/PomodoroTimer';
 import { useTheme } from '@/hooks/useTheme';
 import { useRecentTools } from '@/hooks/useRecentTools';
 import { getSettings, saveSettings } from '@/lib/storage';
+import { PinLock } from '@/components/features/PinLock';
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
@@ -36,6 +37,13 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => getSettings().sidebarCollapsed);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  // PIN lock state — locked on load if PIN is enabled
+  const [pinSettings] = useState(() => {
+    const s = getSettings();
+    return { enabled: s.pinEnabled, hash: s.pinHash };
+  });
+  const [isUnlocked, setIsUnlocked] = useState(() => !getSettings().pinEnabled);
+
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
       saveSettings({ sidebarCollapsed: !prev });
@@ -51,6 +59,19 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  // Show PIN lock overlay if PIN is enabled and not yet unlocked
+  if (!isUnlocked && pinSettings.enabled) {
+    return (
+      <>
+        {/* Apply theme even on lock screen */}
+        <PinLock
+          pinHash={pinSettings.hash}
+          onUnlock={() => setIsUnlocked(true)}
+        />
+      </>
+    );
+  }
 
   return (
     <BrowserRouter>

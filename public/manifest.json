@@ -1,0 +1,27 @@
+{
+  "name": "ToolKit Pro — All-in-One Global Utility Toolkit",
+  "short_name": "ToolKit Pro",
+  "description": "100% private, serverless, offline-capable utility toolkit running entirely in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity", "developer"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

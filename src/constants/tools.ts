@@ -1,0 +1,175 @@
+import type { Tool, Category } from '@/types';
+
+export const CATEGORIES: Category[] = [
+  {
+    id: 'image',
+    name: 'Image Utilities',
+    icon: 'ImageIcon',
+    color: '#06b6d4',
+    description: 'Compress, convert, and transform images',
+  },
+  {
+    id: 'developer',
+    name: 'Developer Tools',
+    icon: 'Code2',
+    color: '#6366f1',
+    description: 'JSON, code, regex, and more',
+  },
+  {
+    id: 'daily',
+    name: 'Daily Productivity',
+    icon: 'Zap',
+    color: '#10b981',
+    description: 'Notes, timers, and counters',
+  },
+  {
+    id: 'security',
+    name: 'Security & Privacy',
+    icon: 'ShieldCheck',
+    color: '#f59e0b',
+    description: 'Passwords, keys, and encryption',
+  },
+  {
+    id: 'text',
+    name: 'Text & Speech',
+    icon: 'Type',
+    color: '#f43f5e',
+    description: 'Text processing and speech tools',
+  },
+];
+
+export const TOOLS: Tool[] = [
+  // Image Utilities
+  {
+    id: 'image-compressor',
+    name: 'Image Compressor',
+    description: 'Compress images with quality control and format selection',
+    category: 'image',
+    icon: 'Minimize2',
+    color: '#06b6d4',
+    bgColor: 'rgba(6,182,212,0.1)',
+    path: '/tools/image/compressor',
+    tags: ['compress', 'optimize', 'jpg', 'png', 'webp', 'image'],
+    isNew: false,
+  },
+  {
+    id: 'webp-converter',
+    name: 'WebP Converter',
+    description: 'Convert WebP images to PNG or JPG format instantly',
+    category: 'image',
+    icon: 'ArrowLeftRight',
+    color: '#06b6d4',
+    bgColor: 'rgba(6,182,212,0.1)',
+    path: '/tools/image/webp-converter',
+    tags: ['webp', 'png', 'jpg', 'convert', 'image'],
+  },
+  {
+    id: 'svg-to-png',
+    name: 'SVG to PNG',
+    description: 'Convert SVG files to high-resolution PNG images',
+    category: 'image',
+    icon: 'Layers',
+    color: '#06b6d4',
+    bgColor: 'rgba(6,182,212,0.1)',
+    path: '/tools/image/svg-to-png',
+    tags: ['svg', 'png', 'convert', 'vector', 'image'],
+  },
+  // Developer Tools
+  {
+    id: 'json-formatter',
+    name: 'JSON Formatter',
+    description: 'Format, validate, and minify JSON with syntax highlighting',
+    category: 'developer',
+    icon: 'Braces',
+    color: '#6366f1',
+    bgColor: 'rgba(99,102,241,0.1)',
+    path: '/tools/developer/json-formatter',
+    tags: ['json', 'format', 'validate', 'minify', 'developer'],
+  },
+  {
+    id: 'code-beautifier',
+    name: 'Code Beautifier',
+    description: 'Beautify or minify JavaScript, CSS, and HTML code',
+    category: 'developer',
+    icon: 'Code2',
+    color: '#6366f1',
+    bgColor: 'rgba(99,102,241,0.1)',
+    path: '/tools/developer/code-beautifier',
+    tags: ['code', 'beautify', 'minify', 'javascript', 'css', 'html'],
+  },
+  {
+    id: 'regex-tester',
+    name: 'Regex Tester',
+    description: 'Test and debug regular expressions with live matching',
+    category: 'developer',
+    icon: 'Search',
+    color: '#6366f1',
+    bgColor: 'rgba(99,102,241,0.1)',
+    path: '/tools/developer/regex-tester',
+    tags: ['regex', 'regular expression', 'pattern', 'match', 'test'],
+  },
+  // Security & Privacy
+  {
+    id: 'password-generator',
+    name: 'Password Generator',
+    description: 'Generate secure passwords and cryptographic keys',
+    category: 'security',
+    icon: 'Key',
+    color: '#f59e0b',
+    bgColor: 'rgba(245,158,11,0.1)',
+    path: '/tools/security/password-generator',
+    tags: ['password', 'key', 'secure', 'generate', 'crypto'],
+  },
+  // Text & Speech
+  {
+    id: 'text-to-speech',
+    name: 'Text to Speech',
+    description: 'Convert text to natural speech using browser synthesis',
+    category: 'text',
+    icon: 'Volume2',
+    color: '#f43f5e',
+    bgColor: 'rgba(244,63,94,0.1)',
+    path: '/tools/text/text-to-speech',
+    tags: ['text', 'speech', 'voice', 'tts', 'audio', 'speak'],
+  },
+  {
+    id: 'word-counter',
+    name: 'Word & Char Counter',
+    description: 'Count words, characters, sentences, and reading time',
+    category: 'text',
+    icon: 'Type',
+    color: '#f43f5e',
+    bgColor: 'rgba(244,63,94,0.1)',
+    path: '/tools/text/word-counter',
+    tags: ['word', 'character', 'count', 'text', 'analyze'],
+  },
+  // Daily Productivity
+  {
+    id: 'markdown-notes',
+    name: 'Markdown Notes',
+    description: 'Write markdown notes with live preview and auto-save',
+    category: 'daily',
+    icon: 'FileText',
+    color: '#10b981',
+    bgColor: 'rgba(16,185,129,0.1)',
+    path: '/tools/daily/markdown-notes',
+    tags: ['notes', 'markdown', 'editor', 'write', 'save'],
+  },
+  {
+    id: 'pomodoro-timer',
+    name: 'Pomodoro Timer',
+    description: 'Focus timer with work/break cycles and session tracking',
+    category: 'daily',
+    icon: 'Timer',
+    color: '#10b981',
+    bgColor: 'rgba(16,185,129,0.1)',
+    path: '/tools/daily/pomodoro',
+    tags: ['pomodoro', 'timer', 'focus', 'productivity', 'work'],
+  },
+];
+
+export const TOOLS_BY_CATEGORY = TOOLS.reduce<Record<string, Tool[]>>((acc, tool) => {
+  if (!acc[tool.category]) acc[tool.category] = [];
+  acc[tool.category].push(tool);
+  return acc;
+}, {});

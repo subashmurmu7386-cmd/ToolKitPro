@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ImageIcon, Code2, Zap, ShieldCheck, Type,
@@ -11,6 +12,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useRecentTools } from '@/hooks/useRecentTools';
 import { AdBanner } from '@/components/features/AdBanner';
 import type { Tool } from '@/types';
+
 const heroImg = 'https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=1200&h=400&fit=crop&auto=format';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -19,6 +21,78 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Key, Volume2, FileText, Timer, Star, Clock,
 };
 
+// ── Category Progress Bar ─────────────────────────────────────────────────────
+interface CategoryProgressProps {
+  totalTools: number;
+  usedTools: number;
+  color: string;
+}
+
+function CategoryProgressBar({ totalTools, usedTools, color }: CategoryProgressProps) {
+  const pct = totalTools > 0 ? Math.round((usedTools / totalTools) * 100) : 0;
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    el.style.width = '0%';
+    const id = requestAnimationFrame(() => {
+      el.style.transition = 'width 0.85s cubic-bezier(0.4, 0, 0.2, 1)';
+      el.style.width = `${pct}%`;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
+
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+        <div
+          ref={barRef}
+          className="h-full rounded-full"
+          style={{ backgroundColor: color, width: '0%' }}
+        />
+      </div>
+      <span className="text-[10px] font-medium tabular-nums flex-shrink-0" style={{ color }}>
+        {usedTools}/{totalTools} used
+      </span>
+    </div>
+  );
+}
+
+// ── Tool Count Badge ──────────────────────────────────────────────────────────
+interface ToolCountBadgeProps {
+  count: number;
+  color: string;
+  usedCount: number;
+}
+
+function ToolCountBadge({ count, color, usedCount }: ToolCountBadgeProps) {
+  return (
+    <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+      {usedCount > 0 && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border animate-fade-in"
+          style={{
+            backgroundColor: `${color}18`,
+            borderColor: `${color}35`,
+            color,
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
+            style={{ backgroundColor: color }}
+          />
+          {usedCount} recent
+        </span>
+      )}
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary text-muted-foreground border border-border">
+        {count} tool{count !== 1 ? 's' : ''}
+      </span>
+    </div>
+  );
+}
+
+// ── Tool Card ─────────────────────────────────────────────────────────────────
 function ToolCard({ tool, onNavigate }: { tool: Tool; onNavigate: (path: string) => void }) {
   const { isFavorite, toggle } = useFavorites();
   const IconComp = ICON_MAP[tool.icon] || Code2;
@@ -62,9 +136,13 @@ function ToolCard({ tool, onNavigate }: { tool: Tool; onNavigate: (path: string)
   );
 }
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 export function Dashboard() {
   const navigate = useNavigate();
   const { recent } = useRecentTools();
+
+  // Build a set of recently-used tool IDs for fast lookup
+  const recentIds = new Set(recent.map(r => r.id));
 
   const stats = [
     { label: 'Total Tools', value: TOOLS.length.toString(), icon: Zap, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -150,21 +228,41 @@ export function Dashboard() {
         const tools = TOOLS_BY_CATEGORY[cat.id] || [];
         if (!tools.length) return null;
         const CatIconComp = ICON_MAP[cat.icon] || Code2;
+        const usedInCategory = tools.filter(t => recentIds.has(t.id)).length;
 
         return (
           <section key={cat.id} id={`category-${cat.id}`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: `${cat.color}20` }}
-              >
-                <CatIconComp className="w-4 h-4" style={{ color: cat.color }} />
+            {/* Category header row */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: `${cat.color}20`,
+                    boxShadow: `0 0 0 1px ${cat.color}25`,
+                  }}
+                >
+                  <CatIconComp className="w-4 h-4" style={{ color: cat.color }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-base font-semibold text-foreground leading-tight">{cat.name}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">{cat.description}</p>
+                  {/* Progress bar — always shown, fills when tools are used */}
+                  <CategoryProgressBar
+                    totalTools={tools.length}
+                    usedTools={usedInCategory}
+                    color={cat.color}
+                  />
+                </div>
               </div>
-              <div>
-                <h2 className="text-base font-semibold text-foreground">{cat.name}</h2>
-                <p className="text-xs text-muted-foreground">{cat.description}</p>
-              </div>
+              {/* Badges */}
+              <ToolCountBadge
+                count={tools.length}
+                color={cat.color}
+                usedCount={usedInCategory}
+              />
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {tools.map(tool => (
                 <ToolCard key={tool.id} tool={tool} onNavigate={navigate} />

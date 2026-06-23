@@ -1,21 +1,137 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Download, Upload, Search, X, Wifi, WifiOff } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Sun, Moon, Download, Upload, Search, X, Wifi, WifiOff, LayoutGrid, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TOOLS } from '@/constants/tools';
+import { TOOLS, CATEGORIES, TOOLS_BY_CATEGORY } from '@/constants/tools';
 import { exportAllData, importData } from '@/lib/storage';
 import { downloadFile } from '@/lib/utils';
+
+const ICON_EMOJI: Record<string, string> = {
+  image: '🖼️',
+  developer: '⚡',
+  daily: '📋',
+  security: '🔐',
+  text: '🔤',
+};
 
 interface HeaderProps {
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
 }
 
+interface CategoryExploreProps {
+  onClose: () => void;
+}
+
+function CategoryExplorePanel({ onClose }: CategoryExploreProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleCategoryClick = (catId: string) => {
+    onClose();
+    if (location.pathname === '/') {
+      // Already on dashboard — scroll to section
+      const el = document.getElementById(`category-${catId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      // Navigate to dashboard, then scroll after a brief delay
+      navigate('/');
+      setTimeout(() => {
+        const el = document.getElementById(`category-${catId}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 250);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop for mobile drawer & desktop dismiss */}
+      <div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] sm:bg-black/20"
+        onClick={onClose}
+      />
+
+      {/* Panel — bottom drawer on mobile, dropdown on sm+ */}
+      <div className="
+        fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl
+        sm:absolute sm:bottom-auto sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:rounded-2xl sm:w-72
+        bg-card border border-border shadow-glass animate-fade-in
+        overflow-hidden
+      ">
+        {/* Handle bar (mobile only) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Explore Categories</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Category list */}
+        <div className="p-2">
+          {CATEGORIES.map(cat => {
+            const toolCount = (TOOLS_BY_CATEGORY[cat.id] || []).length;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryClick(cat.id)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary transition-all group min-h-[52px] text-left"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                  style={{ background: `${cat.color}18` }}
+                >
+                  <span>{ICON_EMOJI[cat.id]}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {cat.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {toolCount} tool{toolCount !== 1 ? 's' : ''} · {cat.description}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer hint */}
+        <div className="px-4 pb-4 pt-1">
+          <p className="text-[11px] text-muted-foreground/60 text-center">
+            Tap a category to jump directly to it on the dashboard
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function Header({ theme, onToggleTheme }: HeaderProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [showCategoryPanel, setShowCategoryPanel] = useState(false);
   const [isOnline] = useState(() => navigator.onLine);
+  const categoryBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Close panel on route change
+  useEffect(() => {
+    setShowCategoryPanel(false);
+  }, [navigate]);
 
   const searchResults = searchQuery.trim()
     ? TOOLS.filter(t =>
@@ -60,8 +176,32 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
         {/* AdSense: header-banner */}
       </div>
 
+      {/* Category Explore Button + Search group */}
+      <div className="relative flex flex-1 max-w-md items-center gap-2">
+        {/* Category Explore Button */}
+        <div className="relative">
+          <button
+            ref={categoryBtnRef}
+            onClick={() => setShowCategoryPanel(s => !s)}
+            title="Explore categories"
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all min-h-[38px] flex-shrink-0',
+              showCategoryPanel
+                ? 'bg-primary text-primary-foreground border-primary shadow-brand'
+                : 'bg-secondary/80 border-border text-muted-foreground hover:text-foreground hover:bg-secondary hover:border-primary/40'
+            )}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">Explore</span>
+          </button>
+
+          {showCategoryPanel && (
+            <CategoryExplorePanel onClose={() => setShowCategoryPanel(false)} />
+          )}
+        </div>
+
       {/* Search */}
-      <div className="relative flex-1 max-w-md">
+      <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
@@ -106,6 +246,7 @@ export function Header({ theme, onToggleTheme }: HeaderProps) {
             ))}
           </div>
         )}
+      </div>
       </div>
 
       <div className="flex items-center gap-2 ml-auto">

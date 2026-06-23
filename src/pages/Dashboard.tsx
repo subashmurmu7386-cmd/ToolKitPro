@@ -152,7 +152,7 @@ export function Dashboard() {
         const CatIconComp = ICON_MAP[cat.icon] || Code2;
 
         return (
-          <section key={cat.id}>
+          <section key={cat.id} id={`category-${cat.id}`}>
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center"
